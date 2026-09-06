@@ -43,6 +43,10 @@ const Monsters = {
         attack: 145,
         magical: false,
     },
+    orcmage: {
+        attack: 125,
+        magical: true,
+    },
     wildsoldier: {
         attack: 145,
         magical: false,
