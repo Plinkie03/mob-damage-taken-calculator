@@ -1,0 +1,748 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Damage Taken Calculator</title>
+
+        <script>
+            const Monsters = {
+                behemoth: {
+                    attack: 100,
+                    magical: false,
+                },
+                revenant: {
+                    attack: 110,
+                    magical: true,
+                },
+                shadow: {
+                    attack: 115,
+                    magical: true,
+                },
+                demon: {
+                    attack: 120,
+                    magical: true,
+                },
+                orc: {
+                    attack: 130,
+                    magical: false,
+                },
+                orcworker: {
+                    attack: 135,
+                    magical: false,
+                },
+                orcwarrior: {
+                    attack: 145,
+                    magical: false,
+                },
+                wildsoldier: {
+                    attack: 145,
+                    magical: false,
+                },
+                wasp: {
+                    attack: 140,
+                    magical: true,
+                },
+                berzerker: {
+                    attack: 165,
+                    magical: false,
+                },
+                shambler: {
+                    attack: 180,
+                    magical: false,
+                },
+                bloodseeker: {
+                    attack: 180,
+                    magical: false,
+                },
+                slimespitter: {
+                    attack: 180,
+                    magical: true,
+                },
+                bandit: {
+                    attack: 135,
+                    magical: false,
+                },
+                110: {
+                    attack: 230,
+                    magical: true,
+                },
+                120: {
+                    attack: 250,
+                    magical: true,
+                },
+                netherslime: {
+                    attack: 250,
+                    magical: false,
+                },
+                violator: {
+                    attack: 300,
+                    magical: false,
+                },
+                130: {
+                    attack: 300,
+                    magical: true,
+                },
+                hunter: {
+                    attack: 135,
+                    magical: false,
+                },
+                thief: {
+                    attack: 135,
+                    magical: false,
+                },
+            };
+
+            const Wobble = [0.65, 1.3];
+            const critDamageMult = 2;
+
+            document.addEventListener("DOMContentLoaded", () => {
+                const btn = document.getElementById("btn");
+                const level = document.getElementById("level");
+                const armor = document.getElementById("armor");
+                const defenseSkill = document.getElementById("defense-skill");
+                const defenseBonus = document.getElementById("defense-bonus");
+                const resistance = document.getElementById("resistance");
+                const mob = document.getElementById("mob");
+
+                const resultNoCrit = document.getElementById("dmg-range");
+                const resultCrit = document.getElementById("dmg-range-crit");
+                const flatRed = document.getElementById("flat-red");
+                const resRed = document.getElementById("res-red");
+                const totalRed = document.getElementById("total-red");
+
+                const inputs = [
+                    level,
+                    armor,
+                    defenseSkill,
+                    defenseBonus,
+                    resistance,
+                    mob,
+                ];
+
+                inputs.forEach((input) => {
+                    const savedValue = localStorage.getItem(
+                        `damage-calc-${input.id}`,
+                    );
+
+                    if (savedValue !== null) {
+                        input.value = savedValue;
+                    }
+
+                    input.addEventListener("input", () => {
+                        calculate();
+                        localStorage.setItem(
+                            `damage-calc-${input.id}`,
+                            input.value,
+                        );
+                    });
+                });
+
+                function calculate() {
+                    const levelValue = parseInt(level.value) || 0;
+                    const armorValue = parseInt(armor.value) || 0;
+                    const defenseSkillValue = parseInt(defenseSkill.value) || 0;
+                    const defenseBonusValue = parseInt(defenseBonus.value) || 0;
+                    const resistanceValue =
+                        (parseInt(resistance.value) || 0) / 100;
+                    const mobData = Monsters[mob.value];
+                    const mobDamageValue =
+                        parseInt(
+                            mobData.attack * (mobData.magical ? 1.1 : 1),
+                        ) || 0;
+
+                    const totalReduction = Math.floor(
+                        (defenseSkillValue + defenseBonusValue) / 5 +
+                            armorValue / 2,
+                    );
+
+                    function calcDamageWithWobble(wobbleN, isCrit = false) {
+                        const critMult = isCrit ? critDamageMult : 1;
+
+                        const damage =
+                            (mobDamageValue * wobbleN -
+                                mobDamageValue * resistanceValue) *
+                                critMult -
+                            totalReduction;
+
+                        return Math.floor(Math.max(damage, 0));
+                    }
+
+                    function getRangeDamage(isCrit = false) {
+                        return Wobble.map((x) =>
+                            calcDamageWithWobble(x, isCrit),
+                        ).join("-");
+                    }
+
+                    flatRed.textContent = totalReduction.toString();
+                    resultNoCrit.textContent = getRangeDamage();
+                    resultCrit.textContent = getRangeDamage(true);
+                }
+
+                btn.addEventListener("click", calculate);
+
+                calculate();
+            });
+        </script>
+
+        <style>
+            * {
+                box-sizing: border-box;
+            }
+
+            :root {
+                --bg: #09070f;
+                --panel: #110d1b;
+                --panel-light: #171022;
+                --border: #302044;
+                --purple: #9b5cff;
+                --purple-dark: #6d35c9;
+                --purple-glow: rgba(155, 92, 255, 0.25);
+                --text: #eee9f7;
+                --muted: #9b91aa;
+                --success: #c89cff;
+            }
+
+            body {
+                margin: 0;
+                min-height: 100vh;
+
+                display: flex;
+                justify-content: center;
+                align-items: flex-start;
+
+                padding: 60px 20px;
+
+                background:
+                    radial-gradient(
+                        circle at 50% 0%,
+                        rgba(111, 48, 190, 0.2),
+                        transparent 40%
+                    ),
+                    linear-gradient(135deg, #08060d, #0d0915 50%, #08060d);
+
+                color: var(--text);
+                font-family:
+                    Inter,
+                    system-ui,
+                    -apple-system,
+                    BlinkMacSystemFont,
+                    "Segoe UI",
+                    sans-serif;
+            }
+
+            input:disabled,
+            select:disabled {
+                background: #0a0710;
+                border-color: #241832;
+                color: #665d72;
+                cursor: not-allowed;
+                opacity: 1;
+                box-shadow: none;
+            }
+
+            input:disabled::placeholder {
+                color: #3d3547;
+            }
+
+            select:disabled {
+                /* Dim the purple dropdown arrow */
+                background-image:
+                    linear-gradient(45deg, transparent 50%, #4a3b58 50%),
+                    linear-gradient(135deg, #4a3b58 50%, transparent 50%);
+            }
+
+            input:disabled:hover,
+            select:disabled:hover {
+                border-color: #241832;
+                background: #0a0710;
+            }
+
+            input:disabled:focus,
+            select:disabled:focus {
+                border-color: #241832;
+                box-shadow: none;
+            }
+
+            body::before {
+                content: "";
+                position: fixed;
+                inset: 0;
+                pointer-events: none;
+
+                background-image:
+                    linear-gradient(
+                        rgba(255, 255, 255, 0.015) 1px,
+                        transparent 1px
+                    ),
+                    linear-gradient(
+                        90deg,
+                        rgba(255, 255, 255, 0.015) 1px,
+                        transparent 1px
+                    );
+
+                background-size: 32px 32px;
+            }
+
+            .container {
+                width: 100%;
+                max-width: 520px;
+            }
+
+            h1 {
+                margin: 0 0 28px;
+
+                text-align: center;
+
+                font-size: 30px;
+                font-weight: 800;
+                letter-spacing: -0.5px;
+
+                color: #ffffff;
+
+                text-shadow:
+                    0 0 10px rgba(155, 92, 255, 0.5),
+                    0 0 30px rgba(155, 92, 255, 0.2);
+            }
+
+            h1::after {
+                content: "";
+                display: block;
+
+                width: 70px;
+                height: 3px;
+
+                margin: 12px auto 0;
+
+                border-radius: 99px;
+
+                background: linear-gradient(
+                    90deg,
+                    transparent,
+                    var(--purple),
+                    transparent
+                );
+
+                box-shadow: 0 0 12px var(--purple);
+            }
+
+            table {
+                width: 100%;
+                border-collapse: separate;
+                border-spacing: 0;
+
+                background: var(--panel);
+
+                border: 1px solid var(--border);
+                border-radius: 14px;
+
+                overflow: hidden;
+
+                box-shadow:
+                    0 20px 60px rgba(0, 0, 0, 0.45),
+                    0 0 30px rgba(95, 40, 160, 0.08);
+            }
+
+            tbody tr {
+                transition:
+                    background 0.15s ease,
+                    box-shadow 0.15s ease;
+            }
+
+            tbody tr:hover {
+                background: rgba(155, 92, 255, 0.05);
+            }
+
+            th,
+            td {
+                padding: 15px 18px;
+                border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            }
+
+            tr:last-child th,
+            tr:last-child td {
+                border-bottom: none;
+            }
+
+            th {
+                width: 52%;
+
+                text-align: left;
+
+                font-size: 14px;
+                font-weight: 600;
+
+                color: #d8d0e4;
+            }
+
+            td {
+                text-align: right;
+            }
+
+            input,
+            select {
+                width: 130px;
+                padding: 9px 12px;
+                border: 1px solid #39274e;
+                border-radius: 8px;
+                outline: none;
+                background: #0b0811;
+                color: #ffffff;
+                font-size: 14px;
+                font-weight: 600;
+                transition:
+                    border-color 0.15s ease,
+                    box-shadow 0.15s ease,
+                    background 0.15s ease;
+            }
+
+            select {
+                width: 160px;
+            }
+
+            input:hover,
+            select:hover {
+                border-color: #51336f;
+            }
+
+            input:focus,
+            select:focus {
+                background: #100b18;
+                border-color: var(--purple);
+                box-shadow:
+                    0 0 0 3px var(--purple-glow),
+                    0 0 15px rgba(155, 92, 255, 0.12);
+            }
+
+            input::placeholder {
+                color: #51485d;
+            }
+
+            footer {
+                position: fixed;
+                bottom: 18px;
+                left: 0;
+                width: 100%;
+                text-align: center;
+                color: #51485d;
+                font-size: 11px;
+                font-weight: 500;
+                letter-spacing: 0.2px;
+                text-shadow: 0 0 8px rgba(155, 92, 255, 0.05);
+                pointer-events: none;
+            }
+            @media (max-width: 500px) {
+                footer {
+                    padding: 0 15px;
+                    font-size: 10px;
+                }
+            }
+            /* Number input arrows */
+            input::-webkit-inner-spin-button,
+            input::-webkit-outer-spin-button {
+                opacity: 0.5;
+            }
+
+            /* Select */
+            select {
+                cursor: pointer;
+                appearance: none;
+                -webkit-appearance: none;
+
+                /* Purple dropdown arrow */
+                background-image:
+                    linear-gradient(45deg, transparent 50%, var(--purple) 50%),
+                    linear-gradient(135deg, var(--purple) 50%, transparent 50%);
+                background-position:
+                    calc(100% - 14px) 50%,
+                    calc(100% - 9px) 50%;
+                background-size:
+                    5px 5px,
+                    5px 5px;
+                background-repeat: no-repeat;
+
+                padding-right: 30px;
+            }
+
+            /* Dropdown options */
+            select option {
+                background: #110d1b;
+                color: #ffffff;
+                font-weight: 600;
+            }
+
+            /* Mobile */
+            @media (max-width: 500px) {
+                input,
+                select {
+                    width: 110px;
+                }
+            }
+
+            tfoot {
+                background: rgba(255, 255, 255, 0.015);
+            }
+
+            tfoot th {
+                padding: 18px;
+            }
+
+            #btn {
+                width: 100%;
+
+                padding: 13px 20px;
+
+                border: 1px solid #a96dff;
+                border-radius: 9px;
+
+                background: linear-gradient(135deg, #8d4ee8, #662db3);
+
+                color: white;
+
+                font-size: 14px;
+                font-weight: 800;
+                letter-spacing: 0.3px;
+
+                cursor: pointer;
+
+                box-shadow:
+                    0 0 20px rgba(155, 92, 255, 0.2),
+                    inset 0 1px rgba(255, 255, 255, 0.18);
+
+                transition:
+                    transform 0.12s ease,
+                    box-shadow 0.12s ease,
+                    filter 0.12s ease;
+            }
+
+            #btn:hover {
+                filter: brightness(1.12);
+
+                box-shadow:
+                    0 0 25px rgba(155, 92, 255, 0.4),
+                    0 0 50px rgba(155, 92, 255, 0.12);
+            }
+
+            #btn:active {
+                transform: translateY(1px);
+            }
+
+            .result {
+                margin-top: 28px;
+            }
+
+            .result table {
+                border-color: #39274e;
+            }
+
+            caption {
+                padding: 17px;
+
+                caption-side: top;
+
+                background: linear-gradient(
+                    90deg,
+                    rgba(155, 92, 255, 0.12),
+                    rgba(155, 92, 255, 0.03)
+                );
+
+                border-bottom: 1px solid var(--border);
+
+                text-align: left;
+
+                color: #ffffff;
+
+                font-size: 15px;
+                font-weight: 800;
+                letter-spacing: 0.5px;
+            }
+
+            caption::before {
+                content: "✦";
+                margin-right: 9px;
+
+                color: var(--purple);
+
+                text-shadow: 0 0 10px var(--purple);
+            }
+
+            .result td {
+                color: var(--success);
+                font-weight: 800;
+
+                text-shadow: 0 0 12px rgba(200, 156, 255, 0.15);
+            }
+
+            #flat-red,
+            #dmg-range,
+            #dmg-range-crit {
+                font-variant-numeric: tabular-nums;
+            }
+
+            @media (max-width: 500px) {
+                body {
+                    padding: 30px 12px;
+                }
+
+                h1 {
+                    font-size: 25px;
+                }
+
+                th,
+                td {
+                    padding: 13px 12px;
+                }
+            }
+        </style>
+    </head>
+
+    <body>
+        <main class="container">
+            <h1>Damage Taken Calculator</h1>
+
+            <table>
+                <tbody>
+                    <tr>
+                        <th scope="row">Level (UNAVAILABLE)</th>
+                        <td>
+                            <input
+                                disabled
+                                id="level"
+                                type="number"
+                                min="1"
+                                placeholder="100"
+                            />
+                        </td>
+                    </tr>
+
+                    <tr>
+                        <th scope="row">Armor</th>
+                        <td>
+                            <input
+                                id="armor"
+                                type="number"
+                                min="1"
+                                placeholder="100"
+                            />
+                        </td>
+                    </tr>
+
+                    <tr>
+                        <th scope="row">Defense Skill</th>
+                        <td>
+                            <input
+                                id="defense-skill"
+                                type="number"
+                                min="1"
+                                placeholder="100"
+                            />
+                        </td>
+                    </tr>
+
+                    <tr>
+                        <th scope="row">Defense Bonus</th>
+                        <td>
+                            <input
+                                id="defense-bonus"
+                                type="number"
+                                min="1"
+                                placeholder="100"
+                            />
+                        </td>
+                    </tr>
+
+                    <tr>
+                        <th scope="row">% Resistance</th>
+                        <td>
+                            <input
+                                id="resistance"
+                                type="number"
+                                min="0"
+                                max="100"
+                                placeholder="100"
+                            />
+                        </td>
+                    </tr>
+
+                    <tr>
+                        <th scope="row">Monster</th>
+                        <td>
+                            <select id="mob">
+                                <option value="none">Select a monster</option>
+                                <option value="minotaur">Minotaur</option>
+                                <option value="gastropod">Gastropod</option>
+                                <option value="iceslime">Ice Slime</option>
+                                <option value="behemoth">Behemoth</option>
+                                <option value="revenant">Revenant</option>
+                                <option value="shadow">Shadow</option>
+                                <option value="demon">Demon</option>
+                                <option value="orc">Orc</option>
+                                <option value="orcworker">Orc Worker</option>
+                                <option value="orcmage">Orc Mage</option>
+                                <option value="orcwarrior">Orc Warrior</option>
+                                <option value="hunter">Hunter</option>
+                                <option value="thief">Thief</option>
+                                <option value="bandit">Bandit</option>
+                                <option value="wildsoldier">
+                                    Wild Soldier
+                                </option>
+                                <option value="wasp">Wasp</option>
+                                <option value="berzerker">Berzerker</option>
+                                <option value="shambler">Shambler</option>
+                                <option value="bloodseeker">Bloodseeker</option>
+                                <option value="slimespitter">
+                                    Slimespitter
+                                </option>
+                                <option value="110">110</option>
+                                <option value="netherslime">
+                                    Nether Slime
+                                </option>
+                                <option value="120">120</option>
+                                <option value="violator">Violator</option>
+                                <option value="130">130</option>
+                            </select>
+                        </td>
+                    </tr>
+                </tbody>
+
+                <tfoot>
+                    <tr>
+                        <th scope="row" colspan="2">
+                            <button id="btn">Calculate</button>
+                        </th>
+                    </tr>
+                </tfoot>
+            </table>
+
+            <div class="result">
+                <table>
+                    <caption>
+                        Result
+                    </caption>
+
+                    <tbody>
+                        <tr>
+                            <th scope="row">Flat Reduction</th>
+                            <td id="flat-red">1</td>
+                        </tr>
+
+                        <tr>
+                            <th scope="row">Damage Range</th>
+                            <td id="dmg-range">1-10</td>
+                        </tr>
+
+                        <tr>
+                            <th scope="row">Damage Range (Crit)</th>
+                            <td id="dmg-range-crit">1-10</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </main>
+
+        <footer>
+            Formula is not verified by Liam/Fhox, it's made out of a lot of
+            research.
+        </footer>
+    </body>
+</html>
