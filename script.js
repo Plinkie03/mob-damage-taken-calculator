@@ -1,4 +1,20 @@
 const Monsters = {
+    minotaur: {
+        attack: 45,
+        magical: false,
+    },
+    iceslime: {
+        attack: 60,
+        magical: true,
+    },
+    ghost: {
+        attack: 50,
+        magical: true,
+    },
+    gastropod: {
+        attack: 45,
+        magical: true,
+    },
     behemoth: {
         attack: 100,
         magical: false,
@@ -125,6 +141,9 @@ document.addEventListener("DOMContentLoaded", () => {
         const defenseBonusValue = parseInt(defenseBonus.value) || 0;
         const resistanceValue = (parseInt(resistance.value) || 0) / 100;
         const mobData = Monsters[mob.value];
+
+        if (!mobData) return;
+
         const mobDamageValue =
             parseInt(mobData.attack * (mobData.magical ? 1.1 : 1)) || 0;
 
